@@ -11,17 +11,22 @@ import pathlib
 # minsepie.predict(['TGTCA'], pbs = 'CAGACTGAGCACG', ha = 'TGATGGCAGAGGAAAGGAAGCCCTGCTTCCTCCA', spacer = 'GGCCCAGACTGAGCACGTGA', mmr = 0, outdir = "./")
 current_dir = pathlib.Path(__file__).parent.resolve()
 
-def predict(insert, fasta = None, pbs = None, ha = None, spacer = None,  pbslen = 13, halen = 15, spclen = 20, mmr = 0, inputmode = None, cellline = None, outdir = None, mean = None, std = None, model = None):
-    pandarallel.initialize()
+def predict(insert=None, fasta = None, pbs = None, ha = None, spacer = None,  pbslen = 13, halen = 15, spclen = 20, mmr = 0, inputmode = None, cellline = None, outdir = None, mean = None, std = None, model = None,request = None, csv = None, onlyZ = False):
+    pandarallel.initialize(verbose=0)
+    
+    if csv is not None:
+        request = pd.read_csv(csv)
+    
     """ Predicts editing outcomes for insert sequences based on pegRNA features given individually or determined from fasta sequence. """
-    # Clean up variables
+        # Clean up variables
+    
     if model == None:
         model = 'MinsePIE_v3.sav'
     if inputmode == None:
         inputmode = 'dna'
 
     # Retrieve pegRNA features
-    if (ha is not None) and ((pbs is not None) and (spacer is not None)):
+    if ((ha is not None) and (pbs is not None) and (spacer is not None)) or (request is not None):
         pass
     elif fasta is not None:
         try:
@@ -31,16 +36,17 @@ def predict(insert, fasta = None, pbs = None, ha = None, spacer = None,  pbslen 
     else:
         raise ArgumentError("Please provide either a target sequence as fasta or the PBS, RTT and spacer sequence.")
     
-    # Retrieve mmr if mmr is not given
+      # Retrieve mmr if mmr is not given
     if mmr == None:
         mmr = cellline2mmr(cellline, current_dir / 'celllines.csv', head = 'mmr')
 
     # Load the model
     model_dict = load_model(current_dir / 'models')
     
-    # Create the dataframe
-    request = init_df(insert, spacer, pbs, ha, mmr, mean, std)
-
+    if request is None:
+        # Create the dataframe
+        request = init_df(insert, spacer, pbs, ha, mmr, mean, std)
+        
     # We have the basic table with sequences now, but if it's an amino acid sequence, we need to convert it to DNA, or if it's DNA we need to accept ambigiuity
     if inputmode == 'protein':
         request = extend_aa(request)
@@ -51,12 +57,13 @@ def predict(insert, fasta = None, pbs = None, ha = None, spacer = None,  pbslen 
     request = enhance_feature_df(request)
 
     # Prediction
-    request = prediction(request, model_dict, model)
+    request = prediction(request, model_dict, model,onlyZ = onlyZ) #modified to include onlyZ, which only returns the z-score if true.
 
     if not outdir == None:
-        outpath = os.path.join(outdir, datetime.now().strftime("%Y%m%d-%H%M%S") + '_minsepie_prediction.csv')
+        #outpath = os.path.join(outdir, datetime.now().strftime("%Y%m%d-%H%M%S") + '_minsepie_prediction.csv')
+        outpath = os.path.join(outdir, 'minsepie_prediction.csv')
         request[['insert','zscore', 'percIns_predicted']].to_csv(outpath, index = False)
-
+    
     return request
 
 def cellline2mmr(cellline: str, file: str, head = 'mmr') -> int:

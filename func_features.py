@@ -131,7 +131,7 @@ def extend_ambiguous_dna(seq):
    return list(map("".join, product(*map(ambiguous_dna_values.get, seq))))
 
 def extend_nt(df):
-    df['seqlist'] = df['insert'].apply(lambda x: extend_ambiguous_dna(x))
+    df['seqlist'] = df['insert']#.apply(lambda x: extend_ambiguous_dna(x))
     df = df.explode('seqlist')
     df = df.rename(columns = {'insert': 'inputsequence', 'seqlist': 'insert'})
     return df
