@@ -79,3 +79,30 @@ Prediction of prime editing insertion efficiencies using sequence features and D
 Jonas Koeppel, Juliane Weller, Elin Madli Peets, Ananth Pallaseni, Ivan Kuzmin, Uku Raudvere, Hedi Peterson, Fabio Giuseppe Liberante & Leopold Parts </br>
 [Nat Biotechnol](https://www.biorxiv.org/content/10.1101/2021.11.10.468024v1) (2023)</br>
 doi: [https://doi.org/10.1101/2021.11.10.468024](https://doi.org/10.1038/s41587-023-01678-y)
+
+## Batch usage in this fork
+
+This fork adds a small batch wrapper script for CSV-based runs, intended to simplify high-throughput use on tables of designs.
+
+Example command:
+
+```bash
+python run_minsepie.py --in_csv input.csv --out_csv predictions.csv --onlyZ True
+```
+
+The wrapper reads the input table with pandas, calls `minsepie.predict(...)` on the batch request, converts the result to a DataFrame if needed, and writes the output to a CSV file.
+
+The currently attached wrapper script uses the following command-line arguments:
+
+- `--in_csv`: path to the input CSV.
+- `--out_csv`: path to the output CSV.
+- `--onlyZ`: optional boolean-like argument for z-score-only output behavior.
+
+## Attribution
+
+This repository is a fork of the original MinsePIE project and builds on the original model, codebase, and manuscript-associated work described in the upstream README and reference section.
+
+Original scientific and software attribution should remain with the original MinsePIE authors, including Juliane Weller and co-authors on the cited manuscript: Jonas Koeppel, Elin Madli Peets, Juliane Weller, Ananth Pallaseni, Fabio Liberante, and Leopold Parts.
+
+The additional batch CSV wrapper in this fork is an adaptation for local high-throughput workflow convenience and is not intended to replace or obscure attribution to the original Parts lab-associated work.
+
